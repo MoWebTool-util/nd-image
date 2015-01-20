@@ -49,10 +49,12 @@ module.exports = {
      * 提供给 setInterval 来执行 onReadyList 中的函数
      */
     var tick = function() {
-      var i, n;
+      var i, n = onReadyList.length, onReady;
 
-      for (i = 0, n = onReadyList.length; i < n; i++) {
-        onReadyList[i].end ? onReadyList.splice(i--, 1) : onReadyList[i]();
+      for (i = 0; i < onReadyList.length; i++) {
+        onReady = onReadyList[i];
+        onReady.end ? onReadyList.splice(i--, 1) : onReady();
+        n--;
       }
 
       onReadyList.length || stop();
@@ -88,9 +90,19 @@ module.exports = {
 
         // 加载错误后的事件
         img.onerror = function() {
-          params.error && params.error.call(img);
-          onready.end = true;
-          img = img.onload = img.onerror = null;
+          setTimeout(function() {
+            if (img) {
+              if (img.complete) {
+                params.ready.call(img);
+                params.load && params.load.call(img);
+              } else {
+                params.error && params.error.call(img);
+              }
+
+              img = img.onload = img.onerror = null;
+            }
+            onready.end = true;
+          }, 80);
         };
 
         // 图片尺寸就绪
