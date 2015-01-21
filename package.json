@@ -1,6 +1,6 @@
 {
   "name": "nd-image",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "图片缩放、居中、旋转、加载。",
   "keywords": [],
   "homepage": "https://github.com/ndfront/nd-image",

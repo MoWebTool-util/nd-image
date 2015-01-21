@@ -142,7 +142,7 @@ module.exports = {
     };
   })(),
 
-  /**
+    /**
    * 计算图片缩放信息
    * 仅返回计算后的数据，需要在使用时候的回调中调用
    * @param params
@@ -153,6 +153,8 @@ module.exports = {
    *     width: 传入的图片宽度
    *     height: 传入的图片高度
    *     overflow: 是否允许图片超出max范围，true允许，即按短边缩放，其他标识按长边缩放（默认值），可选
+   *     isStretch: 是否允许拉伸图片
+   *     isFixed： 是否等比例适配父框，长宽都不超过max限制
    *     callback: 回调
    * @return {Object}
    *     width: 缩放后的宽
@@ -164,6 +166,92 @@ module.exports = {
       height = params.height || image.height,
       maxWidth = params.maxWidth || params.max,
       maxHeight = params.maxHeight || params.max,
+      overflow = params.overflow || false,
+      isStretch = params.stretch || false,
+      isFixed = params.fixed || false,
+      imgMsg = {
+        width: width,
+        height: height,
+        maxWidth: maxWidth,
+        maxHeight: maxHeight
+      };
+
+    if (isStretch) {
+      var stretch = this._stretch(imgMsg);
+      imgMsg.width = width = stretch.width;
+      imgMsg.height = height = stretch.height;
+    }
+
+    if(width > maxWidth || height > maxHeight) {
+      if (isFixed) {
+        var fixed = this._fixed(imgMsg);
+        width = fixed.width;
+        height = fixed.height;
+      } else {
+        var normal = this._normal(imgMsg, overflow);
+        width = normal.width;
+        height = normal.height;
+      }
+
+    }
+
+    params.callback && params.callback.call(image, width, height);
+
+    return {
+      width: width,
+      height: height
+    };
+  },
+
+  /**
+   * 拉伸图片
+   * 返回计算后的数据
+   * @param params
+   *     maxWidth: 图片最大宽度
+   *     maxHeight: 图片最大高度
+   *     width: 传入的图片宽度
+   *     height: 传入图片高度
+   * @return {Object}
+   *     width: 拉伸后的宽
+   *     height: 拉伸后的高
+   */
+  _stretch: function(params) {
+    var width = params.width;
+    var height = params.height;
+    var maxWidth = params.maxWidth;
+    var maxHeight = params.maxHeight;
+
+    if(width > height) {
+      width *= maxHeight / height;
+      height = maxHeight;
+    } else {
+      height *= maxWidth / width;
+      width = maxWidth;
+    }
+
+    return {
+      width: width,
+      height: height
+    };
+  },
+
+  /**
+   * 图片等比例适配父框，长宽都不超过max限制
+   * 返回计算后的数据
+   * @param params
+   *     maxWidth: 图片最大宽度
+   *     maxHeight: 图片最大高度
+   *     width: 传入的图片宽度
+   *     height: 传入图片高度
+   * @return {Object}
+   *     width: 拉伸后的宽
+   *     height: 拉伸后的高
+   */
+  _fixed: function(params) {
+    var width = params.width,
+      height = params.height,
+      maxWidth = params.maxWidth,
+      maxHeight = params.maxHeight,
       imgRate,
       xrate,
       yrate;
@@ -183,8 +271,47 @@ module.exports = {
       }
     }
 
-    params.callback && params.callback.call(image, width, height);
+    return {
+      width: width,
+      height: height
+    };
+  },
 
+  /**
+   * 图片长短边适配
+   * 返回计算后的数据
+   * @param params
+   *     maxWidth: 图片最大宽度
+   *     maxHeight: 图片最大高度
+   *     width: 传入的图片宽度
+   *     height: 传入图片高度
+   * @param overflow 根据短边缩放
+   * @return {Object}
+   *     width: 拉伸后的宽
+   *     height: 拉伸后的高
+   */
+  _normal: function(params, overflow) {
+    var width = params.width,
+      height = params.height,
+      maxWidth = params.maxWidth,
+      maxHeight = params.maxHeight;
+    if (overflow) { // 根据短边缩放
+      if (width > height) {
+        width /= height / maxHeight;
+        height = maxHeight;
+      } else {
+        height /= width / maxWidth;
+        width = maxWidth;
+      }
+    } else { // 根据长边缩放，这是常用情况
+      if (width > height) {
+        height /= width / maxWidth;
+        width = maxWidth;
+      } else {
+        width /= height / maxHeight;
+        height = maxHeight;
+      }
+    }
     return {
       width: width,
       height: height
