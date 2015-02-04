@@ -49,12 +49,11 @@ module.exports = {
      * 提供给 setInterval 来执行 onReadyList 中的函数
      */
     var tick = function() {
-      var i, n = onReadyList.length, onReady;
+      var i, onReady;
 
       for (i = 0; i < onReadyList.length; i++) {
         onReady = onReadyList[i];
         onReady.end ? onReadyList.splice(i--, 1) : onReady();
-        n--;
       }
 
       onReadyList.length || stop();
@@ -75,10 +74,11 @@ module.exports = {
         height, // 图片高
         newWidth, // 用来比较的图片宽
         newHeight, // 用来比较的图片高
-        img = new Image(); // 图片对象
+        img = params.node || new Image(); // 图片对象
 
-      img.src = '';
-      img.src = params.url;
+      if (params.url) {
+        img.src = params.url;
+      }
 
       // 如果图片被缓存，则直接返回缓存数据
       if (img.complete) {
